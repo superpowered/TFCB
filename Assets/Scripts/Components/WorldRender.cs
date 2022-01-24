@@ -88,12 +88,14 @@ namespace TFCB
             }
         }
 
+        // TODO: Debug, remvoe?
         private void Handle(object sender, OnMainClickArgs eventArgs)
         {
             Vector3Int test1 = _grid.WorldToCell(eventArgs.CameraPos);
             Vector2Int test = new Vector2Int(test1.x, test1.y);
         }
 
+        // TODO: Debug, remvoe?
         private void HandleRot(object sender, OnRotateArgs eventArgs)
         {
             Vector3Int test1 = _grid.WorldToCell(eventArgs.CameraPosition);

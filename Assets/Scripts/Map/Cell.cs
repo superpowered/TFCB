@@ -8,6 +8,7 @@ namespace TFCB
         public int OriginId;
         public bool Solid;
         public int2 Position;
+        public int2 OriginPosition;
 
         public GroundType GroundType;
         public StructureType StructureType;

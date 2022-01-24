@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using System.Linq;
 
-using UnityEngine;
-
 namespace TFCB
 {
     public class MapSystem : SimulationSystem
@@ -12,11 +10,6 @@ namespace TFCB
         public static event EventHandler<OnMapEventArgs> OnUpdateMapRender;
         private WorldMap _worldMap;
         private int _rotation = 0;
-        public override void Init()
-        {
-            SetupEvents();
-            GenerateWorldMap();
-        }
 
         private void SetupEvents()
         {
@@ -36,6 +29,7 @@ namespace TFCB
                     Id = id,
                     Solid = false,
                     Position = IdToPosition(id),
+                    OriginPosition = IdToPosition(id),
                     GroundType = GroundType.Floor1,
                     StructureType = StructureType.None,
                     OverlayType = OverlayType.None,
@@ -70,11 +64,6 @@ namespace TFCB
             SetCell(-5, 5, StructureType.Wall2);
             SetCell(-5, -5, StructureType.Wall2);
             SetCell(-6, 6, StructureType.Wall2);
-        }
-
-        public override void Quit()
-        {
-            SimulationManager.OnTick -= Tick;
         }
 
         private Cell GetCell(int id)
@@ -173,12 +162,14 @@ namespace TFCB
         {
             // adjust world rotation and keep it within 0,90,180,270
             _rotation = direction == "left" ? _rotation + 90 : _rotation - 90;
+            // TODO: function for this? V
             if (_rotation == 360)
                 _rotation = 0;
             if (_rotation == -90)
                 _rotation = 270;
         }
 
+        // TODO: This function is a duplicate. Make a util?
         /// <summary>
         /// Returns tile's rotated position
         /// </summary>
@@ -199,10 +190,64 @@ namespace TFCB
                 Id = PositionToId(cell.Position),
                 Solid = cell.Solid,
                 Position = rotateTile(direction, cell.Position.x, cell.Position.y),
+                OriginPosition = cell.OriginPosition,
                 GroundType = cell.GroundType,
                 StructureType = cell.StructureType,
                 OverlayType = cell.OverlayType,
             };
+        }
+
+        public override void Init()
+        {
+            SetupEvents();
+            GenerateWorldMap();
+        }
+
+        public override void Quit()
+        {
+            SimulationManager.OnTick -= Tick;
+        }
+
+        public bool IsSolid(int x, int y)
+        {
+            if (OnMap(x, y))
+            {
+                Cell cell = GetCell(x, y);
+
+                return cell.Solid;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+        public bool IsSolid(int2 position)
+        {
+            return IsSolid(position.x, position.y);
+        }
+
+        // TODO: remove or refactor
+        public int2? GetOpenPosition()
+        {
+            int2 cellPosition;
+            int timeTried = 0;
+
+            do
+            {
+                if (timeTried > _worldMap.Size * 100)
+                {
+                    return null;
+                }
+
+                cellPosition = new int2(
+                    Utils.RandomRange(-_worldMap.Size, _worldMap.Size),
+                    Utils.RandomRange(-_worldMap.Size, _worldMap.Size)
+                );
+                timeTried++;
+            } while (IsSolid(cellPosition));
+
+            return cellPosition;
         }
     }
 }

@@ -13,6 +13,7 @@ namespace TFCB
         public static event EventHandler<OnTickArgs> OnTick;
 
         public MapSystem MapSystem { get; private set; }
+        public EntitySystem EntitySystem { get; private set; }
 
         private int _tick;
         private float _tickTimer;
@@ -22,6 +23,7 @@ namespace TFCB
             EnforceSingleInstance();
 
             MapSystem = new MapSystem();
+            EntitySystem = new EntitySystem();
 
             _tick = 0;
             _tickTimer = 0;
@@ -30,6 +32,7 @@ namespace TFCB
         public void Start()
         {
             MapSystem.Init();
+            EntitySystem.Init();
         }
 
         private void EnforceSingleInstance()
@@ -60,6 +63,7 @@ namespace TFCB
         private void OnDisable()
         {
             MapSystem.Quit();
+            EntitySystem.Quit();
         }
     }
 }
