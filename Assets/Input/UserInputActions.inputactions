@@ -260,6 +260,39 @@
                     "action": "RotateGlobal",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "MinusEquals",
+                    "id": "44e9d574-5e18-499c-87ae-82b69d55acc6",
+                    "path": "1DAxis",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "RotateGlobal",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "negative",
+                    "id": "8d0100f8-e891-4544-92b0-91155868ceb4",
+                    "path": "<Keyboard>/minus",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "RotateGlobal",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "positive",
+                    "id": "3ace501a-ea36-4634-a5b7-07e0f0e6f7f9",
+                    "path": "<Keyboard>/equals",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "RotateGlobal",
+                    "isComposite": false,
+                    "isPartOfComposite": true
                 }
             ]
         }
