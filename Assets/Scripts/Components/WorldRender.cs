@@ -1,13 +1,23 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
 namespace TFCB
 {
+    public enum CitizenAnimationType
+    {
+        Idle,
+        Walk,
+    }
+
     public class WorldRender : MonoBehaviour
     {
+        private RenderSettings _renderSettings;
+
         private Grid _grid;
+
         private Tilemap _groundTilemap;
         private Tilemap _structureTilemap;
         private Tilemap _overlayTilemap;
@@ -15,12 +25,21 @@ namespace TFCB
         private Dictionary<GroundType, Tile> _groundTiles;
         private Dictionary<StructureType, Tile> _structureTiles;
         private Dictionary<OverlayType, Tile> _overlayTiles;
+        private Dictionary<int, CitizenRenderData> _citizenRenderData;
+        private Dictionary<Nation, GameObject> _nationPrefabs;
 
+        private GameObject _citizensGameObject;
+
+        // TODO: this maybe should be in the map system?
         private int _rotation = 0;
 
         private void Awake()
         {
+            _renderSettings = Resources.Load<RenderSettings>("Settings/RenderSettings");
+
             SetupEvents();
+
+            SetupEntityResources();
 
             SetupTilemapResources();
         }
@@ -28,10 +47,40 @@ namespace TFCB
         private void SetupEvents()
         {
             MapSystem.OnUpdateMapRender += UpdateMapRender;
+            EntitySystem.OnCreateCitizen += CreateCitizenRenderData;
             User.OnMainStart += Handle;
             User.OnRotate += HandleRot;
             //User.OnMouseHold += Handle;
             //User.OnMouseUp += Handle;
+        }
+
+        private void SetupEntityResources()
+        {
+            _citizensGameObject = GameObject.Find("World/Entities/Citizens");
+            _citizenRenderData = new Dictionary<int, CitizenRenderData>();
+            _nationPrefabs = new Dictionary<Nation, GameObject>
+            {
+                [Nation.Guys] = Resources.Load<GameObject>("Prefabs/Entities/Citizen/GuysPrefab"),
+                [Nation.Kailt] = Resources.Load<GameObject>("Prefabs/Entities/Citizen/KailtPrefab"),
+                [Nation.Taylor] = Resources.Load<GameObject>("Prefabs/Entities/Citizen/TaylorPrefab"),
+            };
+
+            Animator guysAnimator = _nationPrefabs[Nation.Guys].GetComponent<Animator>();
+            Animator kailtAnimator = _nationPrefabs[Nation.Kailt].GetComponent<Animator>();
+            Animator taylorAnimator = _nationPrefabs[Nation.Taylor].GetComponent<Animator>();
+
+            foreach (AnimationClip clip in guysAnimator.runtimeAnimatorController.animationClips)
+            {
+                clip.frameRate = 12;
+            }
+            foreach (AnimationClip clip in kailtAnimator.runtimeAnimatorController.animationClips)
+            {
+                clip.frameRate = 12;
+            }
+            foreach (AnimationClip clip in taylorAnimator.runtimeAnimatorController.animationClips)
+            {
+                clip.frameRate = 12;
+            }
         }
 
         private void SetupTilemapResources()
@@ -68,12 +117,19 @@ namespace TFCB
 
         private void Update()
         {
+        }
 
+        private void TearDownEvents()
+        {
+            MapSystem.OnUpdateMapRender -= UpdateMapRender;
+            EntitySystem.OnCreateCitizen -= CreateCitizenRenderData;
+            User.OnMainStart -= Handle;
+            User.OnRotate -= HandleRot;
         }
 
         private void OnDisable()
         {
-            MapSystem.OnUpdateMapRender -= UpdateMapRender;
+            TearDownEvents();
         }
 
         private void UpdateMapRender(object sender, OnMapEventArgs eventArgs)
@@ -86,6 +142,47 @@ namespace TFCB
                 _structureTilemap.SetTile(tilemapPosition, _structureTiles[cell.StructureType]);
                 _overlayTilemap.SetTile(tilemapPosition, _overlayTiles[cell.OverlayType]);
             }
+        }
+
+        private void CreateCitizenRenderData(object sender, OnCitizenEventArgs eventArgs)
+        {
+            Citizen citizen = eventArgs.Citizen;
+            CitizenRenderData citizenRenderData = new CitizenRenderData();
+
+            Vector3 position = GridToWorld(citizen.Position);
+            position.z = citizen.Id * _renderSettings.EntitySpacing;
+
+            citizenRenderData.WorldGameObject = Instantiate(
+                _nationPrefabs[citizen.Nation],
+                position,
+                Quaternion.identity,
+                _citizensGameObject.transform
+            );
+
+            citizenRenderData.Animator = citizenRenderData.WorldGameObject.GetComponent<Animator>();
+
+            _citizenRenderData[citizen.Id] = citizenRenderData;
+
+            PlayAnimation(citizen, CitizenAnimationType.Idle);
+        }
+
+        private void PlayAnimation(Citizen citizen, CitizenAnimationType citizenAnimationType)
+        {
+            CitizenRenderData citizenRenderData = _citizenRenderData[citizen.Id];
+            citizenRenderData.Animator.Play($"Base Layer.{citizen.Nation}-{citizenAnimationType}-{citizen.Direction}");
+        }
+
+        private Vector3 GridToWorld(int x, int y)
+        {
+            Vector3 worldPosition = _grid.CellToWorld(new Vector3Int(x, y, 0));
+            worldPosition.y += 1 / 4f;
+
+            return worldPosition;
+        }
+
+        private Vector3 GridToWorld(int2 position)
+        {
+            return GridToWorld(position.x, position.y);
         }
 
         // TODO: Debug, remvoe?

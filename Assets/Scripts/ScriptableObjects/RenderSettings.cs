@@ -16,5 +16,8 @@ namespace TFCB
         [Space()]
         public float MinZoom = 2f;
         public float MaxZoom = 20f;
+
+        [Header("Entities")]
+        public float EntitySpacing = 0.00001f;
     }
 }

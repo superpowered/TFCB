@@ -14,6 +14,8 @@ namespace TFCB
         public override void Init()
         {
             SetupEvents();
+
+            CreateCitizens();
         }
 
         private void SetupEvents()
@@ -21,7 +23,7 @@ namespace TFCB
             SimulationManager.OnTick += Tick;
         }
 
-        private void CreateCitizen()
+        private void CreateCitizens()
         {
             _citizenList = new List<Citizen>(EntityInfo.TotalCitizens);
 
@@ -35,11 +37,13 @@ namespace TFCB
                 Citizen newCitizen = new Citizen
                 {
                     Direction = Utils.RandomEnumValue<Direction>(),
-                    Nation = Utils.RandomEnumValue<Direction>(),
+                    Nation = Utils.RandomEnumValue<Nation>(),
                     Position = (int2)SimulationManager.Instance.MapSystem.GetOpenPosition(),
                 };
 
                 _citizenList.Add(newCitizen);
+
+                OnCreateCitizen?.Invoke(this, new OnCitizenEventArgs { Citizen = newCitizen });
             }
         }
 

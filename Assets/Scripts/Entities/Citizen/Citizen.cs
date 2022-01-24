@@ -10,7 +10,7 @@ namespace TFCB
 
         public int2 Position { get; set; }
         public Direction Direction { get; set; }
-        public Direction Nation { get; set; }
+        public Nation Nation { get; set; }
 
         public int Id { get; private set; }
 
